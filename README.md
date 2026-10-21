@@ -1,18 +1,18 @@
 # app-template
 
-A small Go HTTP service, scaffolded by `patchy init app` so that [patchy](https://github.com/devthenet-labs/patchy) can
+A small Go HTTP service, scaffolded by `maul init app` so that [maul](https://github.com/devthenet-labs/maul) can
 build intents in it and preview its pull requests. It listens on port 8080, answers `/healthz` once it is
 ready and writes nothing to disk.
 
 ## Using this template
 
 A repository created from this template still carries this one's names: `app-template` in `go.mod`, the page, the image
-names and `.patchy/agent.yaml`. In the new repository's checkout, regenerate the tree for it first, with the `patchy`
+names and `.maul/agent.yaml`. In the new repository's checkout, regenerate the tree for it first, with the `maul`
 CLI:
 
 ```sh
-rm .patchy/agent.yaml .patchy/Dockerfile # --force keeps both, and they still name app-template's agent image
-patchy init app --force --repo <owner>/<name> --registry <account>.dkr.ecr.<region>.amazonaws.com
+rm .maul/agent.yaml .maul/Dockerfile # --force keeps both, and they still name app-template's agent image
+maul init app --force --repo <owner>/<name> --registry <account>.dkr.ecr.<region>.amazonaws.com
 ```
 
 `--image-name` defaults to the repository name made image-safe (`Hello.Web` becomes `hello-web`). Commit the result,
@@ -40,8 +40,8 @@ docker run --rm --read-only --cap-drop ALL --security-opt no-new-privileges \
 curl -s localhost:8080/healthz
 ```
 
-`.patchy/Dockerfile` is a different image: the one patchy's coding agent works in, which is patchy's agent base plus the
-pinned Go toolchain and this module's dependencies, offline. `.patchy/agent.yaml` declares its immutable tag.
+`.maul/Dockerfile` is a different image: the one maul's coding agent works in, which is maul's agent base plus the
+pinned Go toolchain and this module's dependencies, offline. `.maul/agent.yaml` declares its immutable tag.
 
 ## CI and images
 
@@ -60,9 +60,9 @@ None of them is secret. Set the configuration first and the two `*_PUBLISH_ENABL
 | `PUBLISH_OWNER_ID`         | `gh api repos/devthenet-labs/app-template --jq .owner.id` | its owner's immutable numeric ID                                    |
 | `AWS_REGION`               | `us-east-1`                                               | the registry's AWS region                                           |
 | `ECR_REGISTRY`             | `377946145366.dkr.ecr.us-east-1.amazonaws.com`            | the ECR registry host                                               |
-| `AGENT_IMAGE_REPOSITORY`   | `patchy/app-envs/app-template`                            | the agent image's ECR repository, which `.patchy/agent.yaml` names  |
+| `AGENT_IMAGE_REPOSITORY`   | `maul/app-envs/app-template`                              | the agent image's ECR repository, which `.maul/agent.yaml` names    |
 | `AGENT_ROLE_ARN`           | the agent publisher role ARN                              | assumed only by `publish-agent.yml`                                 |
-| `RUNTIME_IMAGE_REPOSITORY` | `patchy/previews/app-template`                            | the runtime (preview) image's ECR repository                        |
+| `RUNTIME_IMAGE_REPOSITORY` | `maul/previews/app-template`                              | the runtime (preview) image's ECR repository                        |
 | `RUNTIME_ROLE_ARN`         | the runtime publisher role ARN                            | assumed only by `publish-runtime.yml`                               |
 | `AGENT_PUBLISH_ENABLED`    | `true`                                                    | publishes the agent image; anything else skips it                   |
 | `PREVIEW_PUBLISH_ENABLED`  | `true`                                                    | publishes runtime images; set it last, once previews are configured |
@@ -74,9 +74,9 @@ Only these two workflows assume an AWS role, and each role trusts only its own w
 | Trusted workflow (`job_workflow_ref`)                                               | Assumes            | Publishes                                                                            |
 | ----------------------------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------ |
 | `devthenet-labs/app-template/.github/workflows/publish-runtime.yml@refs/heads/main` | `RUNTIME_ROLE_ARN` | the runtime image as `sha-<commit>`, and `main-<commit>` for a default-branch commit |
-| `devthenet-labs/app-template/.github/workflows/publish-agent.yml@refs/heads/main`   | `AGENT_ROLE_ARN`   | the agent image as the `toolchain-v<N>` tag `.patchy/agent.yaml` declares            |
+| `devthenet-labs/app-template/.github/workflows/publish-agent.yml@refs/heads/main`   | `AGENT_ROLE_ARN`   | the agent image as the `toolchain-v<N>` tag `.maul/agent.yaml` declares              |
 
 ### Changing the agent toolchain
 
-Edit `.patchy/Dockerfile` (or the dependencies in `go.mod`) and bump the `toolchain-v<N>` tag in `.patchy/agent.yaml` in
+Edit `.maul/Dockerfile` (or the dependencies in `go.mod`) and bump the `toolchain-v<N>` tag in `.maul/agent.yaml` in
 the same commit: published tags are immutable, so a changed image needs a new tag.
